@@ -14,12 +14,31 @@ struct Contact {
     int height; 
     int id;
     contact_info data;
-    Contact(){
+
+    //Should we allow the creation of Contact nodes without their ID being specified?
+    //I modified the constructor to not allow that
+    //The contact info may not be decided at the moment of creation though, therefore I implmented both cases
+    Contact(int id){
         parent = nullptr; 
         right = nullptr; 
         left = nullptr; 
-        height = 0; 
+        height = 0;
+        this->id = id;
+        this->data.name = "placeholder name";
+        this->data.email = "placeholder@email.com";
+        this->data.phone = "XXX-XXX-XXXX";
     }
+    Contact(int id, contact_info data){
+        parent = nullptr;
+        right = nullptr;
+        left = nullptr;
+        height = 0;
+        this->id = id;
+        this->data.name = data.name;
+        this->data.email = data.email;
+        this->data.phone = data.phone;
+    }
+
     void listInfo() {
         cout << "ID: " << id << ", Name: " << data.name << ", Phone: " << data.phone; 
         cout << ", Email: " << data.email; 
@@ -36,35 +55,39 @@ class AddressBook {
 private: 
     Contact* root;
     int n;
-    void add(Contact node);
+    void addContact(Contact node);
     bool search(int id); 
-    void deletion(int id);  
+    void deleteContact(int id);
     void inorder(Contact* p);
 public: 
     AddressBook() : n(0) {}
-    void addContact();
+    void addContactPrompt();
     bool searchContact();
-    void deleteContact();
+    void deleteContactPrompt();
     void listContacts(); 
     void displayStructure();
 }; 
 
 
-void AddressBook::addContact() {
-    Contact contact;
-    cout << "please enter the ID of the contact you want to add : "; 
-    cin >> contact.id; 
-    while(search(contact.id)) {
-        cout << "this ID is used in another contact, please enter another ID : "; 
-        cin >> contact.id; 
+void AddressBook::addContactPrompt() {
+    int id;
+    contact_info data;
+    cout << "please enter the ID of the contact you want to addContact : ";
+    cin >> id;
+
+    while(search(id)) {
+        cout << "this ID is used in another contact, please enter another ID : ";
+        cin >> id;
     }
     cout << "enter the name of the contact : "; 
-    cin >> contact.data.name; 
+    cin >> data.name; 
     cout << "enter the email of the contact : "; 
-    cin >> contact.data.email; 
+    cin >> data.email; 
     cout << "enter the phone of the contact : "; 
-    cin >> contact.data.phone; 
-    add(contact); 
+    cin >> data.phone; 
+    
+    Contact contact(id, data);
+    addContact(contact);
 }
 
 bool AddressBook::searchContact() {
@@ -81,14 +104,15 @@ bool AddressBook::searchContact() {
     }
 }
 
-void AddressBook::deleteContact() {
+void AddressBook::deleteContactPrompt() {
     int id; 
     cout << "please enter the ID of the contact you want to delete : "; 
+    cin >> id;
     while(!search(id)) {
         cout << "this id doesn't exist, please enter a valid ID : "; 
         cin >> id; 
     }
-    deletion(id); 
+    deleteContact(id);
 }
 
 bool AddressBook::search(int id) {
