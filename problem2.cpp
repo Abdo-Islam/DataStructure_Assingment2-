@@ -7,14 +7,14 @@ struct contact_info {
     string phone;
 };
 
-struct Node {
-    Node* parent; 
-    Node* right;
-    Node* left;
+struct Contact {
+    Contact* parent;
+    Contact* right;
+    Contact* left;
     int height; 
     int id;
     contact_info data;
-    Node(){
+    Contact(){
         parent = nullptr; 
         right = nullptr; 
         left = nullptr; 
@@ -34,24 +34,24 @@ struct Node {
 
 class AddressBook {
 private: 
-    Node* root; 
+    Contact* root;
     int n;
-    void add(Node node);
+    void add(Contact node);
     bool search(int id); 
     void deletion(int id);  
-    void inorder(Node* p); 
+    void inorder(Contact* p);
 public: 
     AddressBook() : n(0) {}
     void addContact();
     bool searchContact();
     void deleteContact();
     void listContacts(); 
-    void displayTree(); 
+    void displayStructure();
 }; 
 
 
 void AddressBook::addContact() {
-    Node contact;  
+    Contact contact;
     cout << "please enter the ID of the contact you want to add : "; 
     cin >> contact.id; 
     while(search(contact.id)) {
@@ -92,7 +92,7 @@ void AddressBook::deleteContact() {
 }
 
 bool AddressBook::search(int id) {
-    Node* p = root;
+    Contact* p = root;
     while (p != nullptr) {
         if(id == p->id) 
             return true; 
@@ -106,11 +106,11 @@ bool AddressBook::search(int id) {
 
 
 void AddressBook::listContacts() {
-    Node* p = root; 
+    Contact* p = root;
     inorder(p); 
 }
 
-void AddressBook::inorder(Node* p) {
+void AddressBook::inorder(Contact* p) {
     if(p != nullptr) {
         inorder(p->left); 
         p->listInfo(); 
