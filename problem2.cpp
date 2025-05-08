@@ -32,7 +32,7 @@ struct Node {
     }
 }; 
 
-class AVLTree {
+class AddressBook {
 private: 
     Node* root; 
     int n;
@@ -41,7 +41,7 @@ private:
     void deletion(int id);  
     void inorder(Node* p); 
 public: 
-    AVLTree() : n(0) {}
+    AddressBook() : n(0) {}
     void addContact();
     bool searchContact();
     void deleteContact();
@@ -50,7 +50,7 @@ public:
 }; 
 
 
-void AVLTree::addContact() {
+void AddressBook::addContact() {
     Node contact;  
     cout << "please enter the ID of the contact you want to add : "; 
     cin >> contact.id; 
@@ -67,7 +67,7 @@ void AVLTree::addContact() {
     add(contact); 
 }
 
-bool AVLTree::searchContact() {
+bool AddressBook::searchContact() {
     int id; 
     cout << "enter the ID of the contact you want to search : "; 
     cin >> id; 
@@ -81,7 +81,7 @@ bool AVLTree::searchContact() {
     }
 }
 
-void AVLTree::deleteContact() {
+void AddressBook::deleteContact() {
     int id; 
     cout << "please enter the ID of the contact you want to delete : "; 
     while(!search(id)) {
@@ -91,7 +91,7 @@ void AVLTree::deleteContact() {
     deletion(id); 
 }
 
-bool AVLTree::search(int id) {
+bool AddressBook::search(int id) {
     Node* p = root;
     while (p != nullptr) {
         if(id == p->id) 
@@ -105,12 +105,12 @@ bool AVLTree::search(int id) {
 }
 
 
-void AVLTree::listContacts() {
+void AddressBook::listContacts() {
     Node* p = root; 
     inorder(p); 
 }
 
-void AVLTree::inorder(Node* p) {
+void AddressBook::inorder(Node* p) {
     if(p != nullptr) {
         inorder(p->left); 
         p->listInfo(); 
