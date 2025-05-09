@@ -1,5 +1,5 @@
-#include <iostream> 
-using namespace std; 
+#include <iostream>
+using namespace std;
 
 struct contact_info {
     string name;
@@ -11,7 +11,7 @@ struct Contact {
     Contact* parent;
     Contact* right;
     Contact* left;
-    int height; 
+    int height;
     int id;
     contact_info data;
 
@@ -19,9 +19,9 @@ struct Contact {
     //I modified the constructor to not allow that
     //The contact info may not be decided at the moment of creation though, therefore I implmented both cases
     Contact(int id){
-        parent = nullptr; 
-        right = nullptr; 
-        left = nullptr; 
+        parent = nullptr;
+        right = nullptr;
+        left = nullptr;
         height = 0;
         this->id = id;
         this->data.name = "placeholder name";
@@ -40,23 +40,27 @@ struct Contact {
     }
 
     void listInfo() {
-        cout << "ID: " << id << ", Name: " << data.name << ", Phone: " << data.phone; 
-        cout << ", Email: " << data.email; 
+        cout << "ID: " << id << ", Name: " << data.name << ", Phone: " << data.phone;
+        cout << ", Email: " << data.email;
     }
     void displayInfo() {
-        cout << "ID: " << id << endl;  
-        cout << "Name: " << data.name << endl; 
-        cout << "Phone: " << data.phone << endl; 
-        cout << "Email: " << data.email << endl; 
+        cout << "ID: " << id << endl;
+        cout << "Name: " << data.name << endl;
+        cout << "Phone: " << data.phone << endl;
+        cout << "Email: " << data.email << endl;
     }
-}; 
+    int getHeight() {
+        return height;
+    }
+
+};
 
 class AddressBook {
-private: 
+private:
     Contact* root;
     int n;
-    void addContact(Contact node);
-    bool search(int id); // done
+    Contact* addContact(Contact* potentialParent, Contact* newContact);
+    bool search(int id);// done
     void deleteContact(int id);
     void inorder(Contact* p);   // done 
 public: 
@@ -66,7 +70,7 @@ public:
     void deleteContactPrompt();  // done
     void listContacts();   // done
     void displayStructure();
-}; 
+};
 
 
 void AddressBook::addContactPrompt() {
@@ -79,15 +83,15 @@ void AddressBook::addContactPrompt() {
         cout << "this ID is used in another contact, please enter another ID : ";
         cin >> id;
     }
-    cout << "enter the name of the contact : "; 
-    cin >> data.name; 
-    cout << "enter the email of the contact : "; 
-    cin >> data.email; 
-    cout << "enter the phone of the contact : "; 
-    cin >> data.phone; 
-    
-    Contact contact(id, data);
-    addContact(contact);
+    cout << "enter the name of the contact : ";
+    cin >> data.name;
+    cout << "enter the email of the contact : ";
+    cin >> data.email;
+    cout << "enter the phone of the contact : ";
+    cin >> data.phone;
+
+    Contact* contact = new Contact(id, data);
+    addContact(contact, root);
 }
 
 bool AddressBook::searchContact() {
@@ -112,8 +116,8 @@ bool AddressBook::searchContact() {
 }
 
 void AddressBook::deleteContactPrompt() {
-    int id; 
-    cout << "please enter the ID of the contact you want to delete : "; 
+    int id;
+    cout << "please enter the ID of the contact you want to delete : ";
     cin >> id;
     if(!search(id)) 
         cout << "Contact Not Found." << endl; 
@@ -126,26 +130,37 @@ void AddressBook::deleteContactPrompt() {
 bool AddressBook::search(int id) {
     Contact* p = root;
     while (p != nullptr) {
-        if(id == p->id) 
-            return true; 
-        else if(id > p->id)  
+        if(id == p->id)
+            return true;
+        else if(id > p->id)
             p = p->right;
         else if(id < p->id)
-            p = p->left; 
+            p = p->left;
     }
-    return false; 
+    return false;
 }
 
 
 void AddressBook::listContacts() {
     Contact* p = root;
-    inorder(p); 
+    inorder(p);
 }
 
 void AddressBook::inorder(Contact* p) {
     if(p != nullptr) {
-        inorder(p->left); 
-        p->listInfo(); 
-        inorder(p->right); 
+        inorder(p->left);
+        p->listInfo();
+        inorder(p->right);
     }
-}  
+}
+Contact* AddressBook::addContact(Contact* potentialParent, Contact* newContact) {
+    if (potentialParent == nullptr)
+        return newContact;
+
+    if (newContact->id < potentialParent->id)
+        potentialParent->left = addContact(potentialParent->left, newContact);
+    else
+        potentialParent->right = addContact(potentialParent->right, newContact);
+
+    return newContact;
+}
