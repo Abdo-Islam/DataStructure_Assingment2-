@@ -56,15 +56,15 @@ private:
     Contact* root;
     int n;
     void addContact(Contact node);
-    bool search(int id); 
+    bool search(int id); // done
     void deleteContact(int id);
-    void inorder(Contact* p);
+    void inorder(Contact* p);   // done 
 public: 
     AddressBook() : n(0) {}
-    void addContactPrompt();
-    bool searchContact();
-    void deleteContactPrompt();
-    void listContacts(); 
+    void addContactPrompt();  // done
+    bool searchContact();  // done
+    void deleteContactPrompt();  // done
+    void listContacts();   // done
     void displayStructure();
 }; 
 
@@ -94,25 +94,33 @@ bool AddressBook::searchContact() {
     int id; 
     cout << "enter the ID of the contact you want to search : "; 
     cin >> id; 
-    bool isFound = search(id); 
-    if(isFound) {
-        cout << "Contact Found." << endl; 
-
-    } 
-    else {
-        cout << "Contact Not Found." << endl; 
+    Contact* p = root;
+    while (p != nullptr) {
+        if(id == p->id) 
+        {
+            cout << "Contact Found." << endl; 
+            p->displayInfo();
+            break; 
+        }
+        else if(id > p->id)  
+            p = p->right;
+        else if(id < p->id)
+            p = p->left; 
     }
+    cout << "Contact Not Found." << endl; 
+    return false;
 }
 
 void AddressBook::deleteContactPrompt() {
     int id; 
     cout << "please enter the ID of the contact you want to delete : "; 
     cin >> id;
-    while(!search(id)) {
-        cout << "this id doesn't exist, please enter a valid ID : "; 
-        cin >> id; 
+    if(!search(id)) 
+        cout << "Contact Not Found." << endl; 
+    else {
+        deleteContact(id);
+        cout << "Contact with ID " << id << " deleted." << endl;
     }
-    deleteContact(id);
 }
 
 bool AddressBook::search(int id) {
