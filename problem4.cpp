@@ -1,12 +1,16 @@
 // problem 4 , Mahmoud hosni and Mahmoud Hesham
+#include <fstream>
 #include <iostream>
-#include <vector>
+#include <string>
 using namespace std;
 
 template <typename T>
 class MaxHeap{
 private:
-  vector<T> heap;
+  T* heap;
+  int capacity;
+  int heapSize;
+  
   void heapify(int index) {
     int parent = (index - 1) / 2;
     if (index <= 0 || parent < 0) {
@@ -17,53 +21,97 @@ private:
       heapify(parent);
     }
   }
+  
   void heapifyDown(int index) {
     int leftChild = 2 * index + 1;
     int rightChild = 2 * index + 2;
-    int largest = heap[leftChild] > heap[rightChild] ? leftChild : rightChild;
-    if(heap[index] > heap[largest]) {
-      return;
+    if (leftChild >= heapSize) return;
+    int largest = index;
+    if (leftChild < heapSize && heap[leftChild] > heap[largest])
+      largest = leftChild;
+    if (rightChild < heapSize && heap[rightChild] > heap[largest])
+      largest = rightChild;
+    if (largest != index) {
+      swap(heap[index], heap[largest]);
+      heapifyDown(largest);
     }
-    swap(heap[index], heap[largest]);
-    heapifyDown(largest);
   }
 
 public:
+    MaxHeap(int capacity = 100) {
+      this->capacity = capacity;
+      heap = new T[capacity];
+      heapSize = 0;
+    }
+    
+    ~MaxHeap() {
+      delete[] heap;
+    }
+    
     void insert(const T &value) {
-      heap.push_back(value);
-      heapify(heap.size() - 1);
+      cout << "Inserting: " << value << endl;
+      if (heapSize == capacity) {
+        capacity *= 2;
+        T* newHeap = new T[capacity];
+        for (int i = 0; i < heapSize; i++) {
+          newHeap[i] = heap[i];
+        }
+        delete[] heap;
+        heap = newHeap;
+      }
+      
+      heap[heapSize] = value;
+      heapify(heapSize);
+      heapSize++;
+      print_heap();
     }
 
     T extract_max() {
+      if (heapSize == 0) {
+        throw runtime_error("Heap is empty");
+      }
+      
       T maxValue = heap[0];
-      heap[0] = heap.back();
-      heap.pop_back();
-      heapifyDown(0);
+      heap[0] = heap[heapSize - 1];
+      heapSize--;
+      if (heapSize > 0) {
+        heapifyDown(0);
+      }
       return maxValue;
     }
 
     T peek() {
+      if (heapSize == 0) {
+        throw runtime_error("Heap is empty");
+      }
       return heap[0];
     }
 
     void print_heap() {
-      for (int i = 0; i < heap.size(); i++) {
-        cout << heap[i] << " ";
+      cout << "Heap: [ ";
+      for (int i = 0; i < heapSize; i++) {
+        cout << heap[i];
+        if (i < heapSize - 1) {
+          cout << ", ";
+        }
       }
-      cout << endl;
+      cout << " ]" << endl;
     }
-
 };
 
 class Patient {
   string name;
   int severity, arrivalTime;
 public:
+  // Add default constructor
+  Patient() : name(""), severity(0), arrivalTime(0) {} 
+  
   Patient(string name, int severity, int arrivalTime) {
     this->name = name;
     this->severity = severity;
     this->arrivalTime = arrivalTime;
   }
+  
   bool operator>(const Patient &other) const{
     if(severity == other.severity)
       return arrivalTime < other.arrivalTime;
@@ -74,7 +122,6 @@ public:
     os << patient.name;
     return os;
   }
-
 };
 
 class EmergencyRoom {
@@ -86,8 +133,8 @@ public:
       cout << "Invalid input" << endl;
       return;
     }
-    Patient p(name, severity, arrivalTime);
-    patients.insert(p);
+    Patient patient(name, severity, arrivalTime);
+    patients.insert(patient);
   }
   Patient treat_patient() {
     return patients.extract_max();
@@ -102,12 +149,9 @@ public:
   }
 };
 
-
-
 int main() {
-    EmergencyRoom er;
+    EmergencyRoom emergency_room;
     int choice;
-    int patientCount = 0;
 
     cout << "Emergency Room Priority Queue System\n";
     cout << "===================================\n";
@@ -131,18 +175,20 @@ int main() {
             case 1: {
                 string name;
                 int severity;
+                int time;
                 cout << "Enter patient name: ";
                 cin >> name;
                 cout << "Enter severity (1-100): ";
                 cin >> severity;
-                patientCount++;
-                er.addPatient(name, severity, patientCount);
+                cout << "Enter arrival time: ";
+                cin >> time;
+                emergency_room.addPatient(name, severity, time);
                 cout << "Patient " << name << " added successfully.\n";
                 break;
             }
             case 2: {
                 try {
-                    Patient p = er.treat_patient();
+                    Patient p = emergency_room.treat_patient();
                     cout << "Treating patient: " << p << endl;
                 } catch (const runtime_error& e) {
                     cout << "No patients in queue.\n";
@@ -151,8 +197,8 @@ int main() {
             }
             case 3: {
                 try {
-                    Patient p = er.peek_patient();
-                    cout << "Next patient to be treated: " << p << endl;
+                    Patient patient = emergency_room.peek_patient();
+                    cout << "Next patient to be treated: " << patient << endl;
                 } catch (const runtime_error& e) {
                     cout << "No patients in queue.\n";
                 }
@@ -160,24 +206,27 @@ int main() {
             }
             case 4: {
                 cout << "Current queue: ";
-                er.printPatients();
+                emergency_room.printPatients();
                 break;
             }
             case 5: {
-                vector<pair<string, int>> sampleData = {
-                    {"Alice", 80}, {"Bob", 90}, {"Charlie", 70},
-                    {"David", 85}, {"Eve", 90}, {"Frank", 75},
-                    {"Grace", 95}, {"Henry", 80}, {"Ivy", 70},
-                    {"Jack", 100}
-                };
-
-                cout << "Adding sample data...\n";
-                for (const auto& patient : sampleData) {
-                    patientCount++;
-                    er.addPatient(patient.first, patient.second, patientCount);
-                    cout << "Added: " << patient.first << endl;
-                }
+              cout << "Adding sample data from file...\n";
+              ifstream file("patients.txt");
+              if (!file) {
+                cout << "Error: Could not open patients.txt\n";
                 break;
+              }
+
+              string name;
+              int severity;
+              int time;
+
+              while (file >> name >> severity >> time) {
+                emergency_room.addPatient(name, severity, time);
+                cout << endl;
+              }
+              file.close();
+              break;
             }
             default:
                 cout << "Invalid choice. Please try again.\n";
