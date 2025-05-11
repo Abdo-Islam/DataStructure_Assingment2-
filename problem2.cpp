@@ -6,14 +6,17 @@ struct contact_info {
     string email;
     string phone;
 };
+struct id_info{
+    contact_info contactInfo;
+    int id;
+};
 
 struct Contact {
     Contact* parent;
     Contact* right;
     Contact* left;
     int height;
-    int id;
-    contact_info data;
+    id_info data;
 
     //Should we allow the creation of Contact nodes without their ID being specified?
     //I modified the constructor to not allow that
@@ -22,76 +25,144 @@ struct Contact {
         parent = nullptr;
         right = nullptr;
         left = nullptr;
-        height = 0;
-        this->id = id;
-        this->data.name = "placeholder name";
-        this->data.email = "placeholder@email.com";
-        this->data.phone = "XXX-XXX-XXXX";
+        height = 1;
+        this->data.id = id;
+        this->data.contactInfo.name = "placeholder name";
+        this->data.contactInfo.email = "placeholder@email.com";
+        this->data.contactInfo.phone = "XXX-XXX-XXXX";
     }
     Contact(int id, contact_info data){
         parent = nullptr;
         right = nullptr;
         left = nullptr;
         height = 0;
-        this->id = id;
-        this->data.name = data.name;
-        this->data.email = data.email;
-        this->data.phone = data.phone;
+        this->data.id = id;
+        this->data.contactInfo.name = data.name;
+        this->data.contactInfo.email = data.email;
+        this->data.contactInfo.phone = data.phone;
     }
 
     void listInfo() {
-        cout << "ID: " << id << ", Name: " << data.name << ", Phone: " << data.phone;
-        cout << ", Email: " << data.email;
+        cout << "ID: " << data.id << ", Name: " << data.contactInfo.name << ", Phone: " << data.contactInfo.phone;
+        cout << ", Email: " << data.contactInfo.email<<endl;
     }
     void displayInfo() {
-        cout << "ID: " << id << endl;
-        cout << "Name: " << data.name << endl;
-        cout << "Phone: " << data.phone << endl;
-        cout << "Email: " << data.email << endl;
+        cout << "ID: " << data.id << endl;
+        cout << "Name: " << data.contactInfo.name << endl;
+        cout << "Phone: " << data.contactInfo.phone << endl;
+        cout << "Email: " << data.contactInfo.email << endl;
     }
-    int getHeight() {
+    void updateHeight();
+    int getHeight(){
         return height;
+    }
+    int getBF();
+    Contact* rightRotate(){
+        Contact *leftChild = this->left;
+        Contact *leftRightGrandchild = leftChild->right;
+
+        leftChild->right = this;
+        this->left = leftRightGrandchild;
+
+        // Update parents
+        leftChild->parent = this->parent;
+        this->parent = leftChild;
+        if (leftRightGrandchild) {
+            leftRightGrandchild->parent = this;
+        }
+
+        // Update heights
+        this->updateHeight();
+        leftChild->updateHeight();
+
+        return leftChild;
+    }
+    Contact* leftRotate(){
+        Contact *rightChild = this->right;
+        Contact *rightLeftGrandchild = rightChild->left;
+
+        rightChild->left = this;
+        this->right = rightLeftGrandchild;
+
+        // Update parents
+        rightChild->parent = this->parent;
+        this->parent = rightChild;
+        if (rightLeftGrandchild){
+            rightLeftGrandchild->parent = this;
+        }
+        // Update heights
+        this->updateHeight();
+        rightChild->updateHeight();
+
+        return rightChild;
     }
 
 };
+void Contact::updateHeight(){
+    if(this->left == nullptr && this->right == nullptr)
+        this->height = 1;
+    else if(this->left == nullptr){
+        this->height = 1 + this->right->getHeight();
+    }
+    else if(this->right == nullptr){
+        this->height = 1 + this->left->getHeight();
+    }
+    else{
+        this->height = 1 + max(this->left->getHeight(), this->right->getHeight());
+    }
+}
+int Contact::getBF() {
+    int leftH = (left ? left->getHeight() : 0);
+    int rightH = (right ? right->getHeight() : 0);
+    return leftH - rightH;
+}
 
 class AddressBook {
 private:
     Contact* root;
     int n;
-    Contact* addContact(Contact* potentialParent, Contact* newContact);
+    Contact* addContact(Contact* ancestor, id_info data);
+    Contact* restructureAdd(Contact* parent);
     bool search(int id);
-    void deleteContact(int id);
-    void inorder(Contact* p);
+    //void deleteContact(int id);
+
 public:
-    AddressBook() : n(0) {}
+    AddressBook() : n(0) { root=nullptr;}
     void addContactPrompt();
     bool searchContact();
-    void deleteContactPrompt();
+    //void deleteContactPrompt();
     void listContacts();
     void displayStructure();
+    void inorder(Contact* p);
+    Contact* getRoot(){
+        return root;
+    }
 };
 
 
 void AddressBook::addContactPrompt() {
     int id;
-    contact_info data;
+    contact_info contactInfo;
+    id_info data;
     cout << "please enter the ID of the contact you want to addContact : ";
     cin >> id;
+    data.id = id;
 
     while(search(id)) {
         cout << "this ID is used in another contact, please enter another ID : ";
         cin >> id;
     }
     cout << "enter the name of the contact : ";
-    cin >> data.name;
+    cin >> contactInfo.name;
     cout << "enter the email of the contact : ";
-    cin >> data.email;
+    cin >> contactInfo.email;
     cout << "enter the phone of the contact : ";
-    cin >> data.phone;
+    cin >> contactInfo.phone;
+    data.contactInfo = contactInfo;
 
-    Contact* contact = new Contact(id, data);
-    addContact(contact, root);
+    root = addContact(root, data);
+    root->parent=nullptr;
+    n++;
 }
 
 bool AddressBook::searchContact() {
@@ -108,7 +179,7 @@ bool AddressBook::searchContact() {
     }
 }
 
-void AddressBook::deleteContactPrompt() {
+/*void AddressBook::deleteContactPrompt() {
     int id;
     cout << "please enter the ID of the contact you want to delete : ";
     cin >> id;
@@ -117,16 +188,16 @@ void AddressBook::deleteContactPrompt() {
         cin >> id;
     }
     deleteContact(id);
-}
+}*/
 
 bool AddressBook::search(int id) {
     Contact* p = root;
     while (p != nullptr) {
-        if(id == p->id)
+        if(id == p->data.id)
             return true;
-        else if(id > p->id)
+        else if(id > p->data.id)
             p = p->right;
-        else if(id < p->id)
+        else if(id < p->data.id)
             p = p->left;
     }
     return false;
@@ -145,14 +216,72 @@ void AddressBook::inorder(Contact* p) {
         inorder(p->right);
     }
 }
-Contact* AddressBook::addContact(Contact* potentialParent, Contact* newContact) {
-    if (potentialParent == nullptr)
-        return newContact;
 
-    if (newContact->id < potentialParent->id)
-        potentialParent->left = addContact(potentialParent->left, newContact);
-    else
-        potentialParent->right = addContact(potentialParent->right, newContact);
 
-    return newContact;
+Contact* AddressBook::restructureAdd(Contact* node) {
+    // LX
+    if (node->getBF() > 1) {
+        if (node->left->getBF() < 0){
+            //rotate grandchild
+            node->left = node->left->leftRotate(); // LR
+        }
+        else{
+            //LL
+        }
+        Contact* newRoot = node->rightRotate();
+
+        return newRoot;
+    }
+
+        // RX
+    else if (node->getBF() < -1) {
+        if (node->right->getBF() > 0) {
+            node->right = node->right->rightRotate(); // RL
+        }
+        else{
+            //RR
+        }
+
+        Contact* newRoot = node->leftRotate();
+
+        return newRoot;
+    }
+    else {
+        return node; // already balanced
+    }
 }
+Contact* AddressBook::addContact(Contact* ancestor, id_info data) {
+    if (ancestor == nullptr) {
+        return new Contact(data.id, data.contactInfo);
+    }
+
+    if (data.id < ancestor->data.id) {
+        Contact *newChild = addContact(ancestor->left, data);
+        ancestor->left = newChild;
+        newChild->parent = ancestor;
+    }
+    else {
+        Contact* newChild = addContact(ancestor->right, data);
+        ancestor->right = newChild;
+        newChild->parent = ancestor;
+    }
+    // Update height of each ancestor
+    ancestor->updateHeight();
+
+    // Rebalance the node if needed
+    return restructureAdd(ancestor);
+}
+
+int main() {
+    AddressBook tree;
+
+    for (int i = 0; i < 7; ++i) {
+        tree.addContactPrompt();
+    }
+
+    cout << "\nContacts:" << endl;
+    tree.listContacts();
+    return 0;
+}
+
+
