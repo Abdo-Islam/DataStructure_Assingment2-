@@ -181,15 +181,15 @@ bool AddressBook::searchContact() {
     cin >> id; 
     Contact* p = root;
     while (p != nullptr) {
-        if(id == p->id) 
+        if(id == p->data.id) 
         {
             cout << "Contact Found." << endl; 
             p->displayInfo();
             break; 
         }
-        else if(id > p->id)  
+        else if(id > p->data.id)  
             p = p->right;
-        else if(id < p->id)
+        else if(id < p->data.id)
             p = p->left; 
     }
     cout << "Contact Not Found." << endl; 
