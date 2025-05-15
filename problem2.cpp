@@ -1,4 +1,6 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <cmath>
 using namespace std;
 
@@ -139,23 +141,22 @@ private:
     int n;
     Contact* addContact(Contact* ancestor, id_info data);
     Contact* restructure(Contact* node);
-    bool search(int id);
-    Contact* deleteContact(Contact* root, int id);
     Contact* minInSubtree(Contact* root);
     void displayStructureLogic(Contact** contactsAtLevel, int level, int maxLevel);
     int maxDepth(Contact* node) {
         if (node == nullptr)
-            return 0;
+        return 0;
         return max(maxDepth(node->left), maxDepth(node->right)) + 1;
     }
     void deleteTree(Contact* root);
-
-public:
+    
+    public:
     AddressBook() : n(0) { root=nullptr;}
     Contact* getContact(int id);
     void addContactPrompt();
-
     void addContactTest(id_info data);
+    Contact* deleteContact(Contact* root, int id);
+    bool search(int id);
     void searchContactPrompt();
     void deleteContactPrompt();
     void listContacts();
@@ -187,11 +188,9 @@ bool AddressBook::search(int id) {
     return false;
 }
 Contact* AddressBook::getContact(int id) {
-    cout<<"entered get(1):\n";
     Contact* p = root;
     while (p != nullptr) {
         if(id == p->data.id) {
-            cout<<"entered get(2):\n";
             return p;
         }
         else if(id > p->data.id)
@@ -199,7 +198,6 @@ Contact* AddressBook::getContact(int id) {
         else if(id < p->data.id)
             p = p->left;
     }
-    cout<<"entered get(3):\n";
     return nullptr;
 }
 
@@ -212,6 +210,8 @@ void AddressBook::searchContactPrompt() {
         isFound = true;
     if(isFound) {
         cout << "Contact Found." << endl;
+        Contact* p = getContact(id);
+        p->displayInfo();
     }
     else {
         cout << "Contact Not Found." << endl;
@@ -220,6 +220,10 @@ void AddressBook::searchContactPrompt() {
 
 void AddressBook::listContacts() {
     Contact* p = root;
+    if(p == nullptr) {
+        cout << "No contacts in the address book." << endl;
+        return;
+    }
     inorder(p);
 }
 
@@ -480,6 +484,10 @@ void AddressBook::displayStructureLogic(Contact** contactsAtLevel, int level, in
 }
 void AddressBook::displayStructure(Contact* root) {
     int maxLevel = maxDepth(root);
+    if(n == 0) {
+        cout << "No contacts in the address book." << endl;
+        return;
+    }
     int maxNumContacts = (int)pow(2, maxLevel);
 
     Contact** currentLevel = new Contact*[maxNumContacts];
@@ -508,40 +516,83 @@ int main() {
     cout << "what do you want to do?" << endl;
     cout << "1-enter the input needed manually" << endl;
     cout << "2-enter the input needed from a file" << endl;
-    cout << "3-exit" << endl;
     int inputChoice;
     cin >> inputChoice;
     while (inputChoice != 1 && inputChoice != 2 && inputChoice != 3) {
         cout << "please enter a valid choice : ";
         cin >> inputChoice;
+    }  
+    if (inputChoice == 1) {
+        int choice;
+        do {
+            cout << "1-add contact" << endl;
+            cout << "2-search for a contact" << endl;
+            cout << "3-delete a contact" << endl;
+            cout << "4-list all contacts" << endl;
+            cout << "5-display the structure of the address book" << endl;
+            cout << "6-exit" << endl;
+            cin >> choice;
+
+            switch (choice) {
+                case 1:
+                    tree.addContactPrompt();
+                    break;
+                case 2:
+                    tree.searchContactPrompt();
+                    break;
+                case 3:
+                    tree.deleteContactPrompt();
+                    break;
+                case 4:
+                    tree.listContacts();
+                    break;
+                case 5:
+                    tree.displayStructure(tree.getRoot());
+                    break;
+                case 6:
+                    cout << "Goodbye!" << endl;
+                    break;
+                default:
+                    cout << "Invalid choice. Please try again." << endl;
+            }
+        } while (choice != 6);
     }
-
-    
-    
-    id_info T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15;
-    id_info* T[15] = {&T1, &T2, &T3, &T4, &T5, &T6, &T7, &T8, &T9, &T10, &T11, &T12, &T13, &T14, &T15};
-
-    for(int i=0;i<15;i++){
-        T[i]->id = i + 1;
-        char c = 'A' + i;
-        T[i]->contactInfo.name = string(1, c);
-        T[i]->contactInfo.phone = string(2, c);
-        T[i]->contactInfo.email = string(3, c);
+    else if (inputChoice == 2) {
+        ifstream inputFile("contacts.txt");
+        string line; 
+        if (!inputFile) {
+            cout << "Error opening file." << endl;
+            return 1;
+        }
+        while(getline(inputFile, line)) {
+            stringstream ss(line);
+            id_info data;
+            ss >> data.id;
+            ss.ignore(1); 
+            getline(ss, data.contactInfo.name, ',');
+            getline(ss, data.contactInfo.phone, ',');   
+            getline(ss, data.contactInfo.email, ',');
+            tree.addContactTest(data);
+        }
+        tree.listContacts();
+        tree.displayStructure(tree.getRoot());
+        tree.deleteContact(tree.getRoot(), 7); 
+        cout << "contact with id 7 deleted" << endl;
+        tree.deleteContact(tree.getRoot(), 3); 
+        cout << "contact with id 3 deleted" << endl;
+        tree.deleteContact(tree.getRoot(), 4);
+        cout << "contact with id 4 deleted" << endl;
+        if (tree.search(3)) 
+        cout << "contact with id 3 exists" << endl;
+        else
+        cout << "contact with id 3 doesn't exist" << endl; 
+        if (tree.search(5))
+        cout << "contact with id 5 exists" << endl;
+        else
+        cout << "contact with id 5 doesn't exist" << endl;
+        tree.listContacts();
+        tree.displayStructure(tree.getRoot());
     }
-
-    for(int i=0;i<15;i++){
-        tree.addContactTest(*T[i]);
-    }
-    cout << "\nContacts (before del):" << endl;
-    tree.listContacts();
-    tree.displayStructure(tree.getRoot());
-    tree.deleteContactPrompt();
-
-    cout << "\nContacts (after del):" << endl;
-    tree.listContacts();
-    tree.displayStructure(tree.getRoot());
-    cout<<endl;
-
     return 0;
 }
 
