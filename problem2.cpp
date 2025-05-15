@@ -31,6 +31,16 @@ struct Contact {
         this->data.contactInfo.email = "placeholder@email.com";
         this->data.contactInfo.phone = "XXX-XXX-XXXX";
     }
+    Contact(id_info data){
+        parent = nullptr;
+        right = nullptr;
+        left = nullptr;
+        height = 0;
+        this->data.id = data.id;
+        this->data.contactInfo.name = data.contactInfo.name;
+        this->data.contactInfo.email = data.contactInfo.email;
+        this->data.contactInfo.phone = data.contactInfo.phone;
+    }
     Contact(int id, contact_info data){
         parent = nullptr;
         right = nullptr;
@@ -121,21 +131,11 @@ class AddressBook {
 private:
     Contact* root;
     int n;
-    Contact* addContact(Contact* potentialParent, Contact* newContact);
     bool search(int id);// done
     void deleteContact(int id);
     void inorder(Contact* p);   // done 
-public: 
-    AddressBook() : n(0) {}
-    void addContactPrompt();  // done
-    bool searchContact();  // done
-    void deleteContactPrompt();  // done
-    void listContacts();   // done
-    Contact* addContact(Contact* ancestor, id_info data);
-    Contact* restructureAdd(Contact* parent);
-    bool search(int id);
-    //void deleteContact(int id);
-
+    Contact* restructureAdd(Contact* node); 
+    Contact* addContact(Contact* ancestor, id_info data); 
 public:
     AddressBook() : n(0) { root=nullptr;}
     void addContactPrompt();
@@ -143,7 +143,6 @@ public:
     //void deleteContactPrompt();
     void listContacts();
     void displayStructure();
-    void inorder(Contact* p);
     Contact* getRoot(){
         return root;
     }
@@ -152,23 +151,21 @@ public:
 
 void AddressBook::addContactPrompt() {
     int id;
-    contact_info contactInfo;
     id_info data;
     cout << "please enter the ID of the contact you want to addContact : ";
     cin >> id;
-    data.id = id;
-
     while(search(id)) {
         cout << "this ID is used in another contact, please enter another ID : ";
         cin >> id;
     }
+    data.id = id;
     cout << "enter the name of the contact : ";
-    cin >> contactInfo.name;
+    cin >> data.contactInfo.name;
     cout << "enter the email of the contact : ";
-    cin >> contactInfo.email;
+    cin >> data.contactInfo.email;
     cout << "enter the phone of the contact : ";
-    cin >> contactInfo.phone;
-    data.contactInfo = contactInfo;
+    cin >> data.contactInfo.phone;
+    Contact* newContact = new Contact(data);
 
     root = addContact(root, data);
     root->parent=nullptr;
@@ -299,12 +296,23 @@ Contact* AddressBook::addContact(Contact* ancestor, id_info data) {
 int main() {
     AddressBook tree;
 
-    for (int i = 0; i < 7; ++i) {
-        tree.addContactPrompt();
+    cout << "Welcome back ya User!" << endl;
+    cout << "this is an address book program" << endl;
+    cout << "you can add contacts, search for them, delete them, list them or " << endl;
+    cout << "display the structure of the address book" << endl;
+    cout << "what do you want to do?" << endl;
+    cout << "1-enter the input needed manually" << endl;
+    cout << "2-enter the input needed from a file" << endl;
+    cout << "3-exit" << endl;
+    int inputChoice;
+    cin >> inputChoice;
+    while (inputChoice != 1 && inputChoice != 2 && inputChoice != 3) {
+        cout << "please enter a valid choice : ";
+        cin >> inputChoice;
     }
 
-    cout << "\nContacts:" << endl;
-    tree.listContacts();
+    
+    
     return 0;
 }
 
