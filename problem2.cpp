@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 using namespace std;
 
 struct contact_info {
@@ -45,7 +46,7 @@ struct Contact {
         parent = nullptr;
         right = nullptr;
         left = nullptr;
-        height = 0;
+        height = 1;
         this->data.id = id;
         this->data.contactInfo.name = data.name;
         this->data.contactInfo.email = data.email;
@@ -127,26 +128,125 @@ int Contact::getBF() {
     return leftH - rightH;
 }
 
+void displaySpaces(int count) {
+    for (int i = 0; i < count; ++i)
+        cout << " ";
+}
+
 class AddressBook {
 private:
     Contact* root;
     int n;
-    bool search(int id);// done
-    void deleteContact(int id);
-    void inorder(Contact* p);   // done 
-    Contact* restructureAdd(Contact* node); 
-    Contact* addContact(Contact* ancestor, id_info data); 
+    Contact* addContact(Contact* ancestor, id_info data);
+    Contact* restructure(Contact* node);
+    bool search(int id);
+    Contact* deleteContact(Contact* root, int id);
+    Contact* minInSubtree(Contact* root);
+    void displayStructureLogic(Contact** contactsAtLevel, int level, int maxLevel);
+    int maxDepth(Contact* node) {
+        if (node == nullptr)
+            return 0;
+        return max(maxDepth(node->left), maxDepth(node->right)) + 1;
+    }
+    void deleteTree(Contact* root);
+
 public:
     AddressBook() : n(0) { root=nullptr;}
+    Contact* getContact(int id);
     void addContactPrompt();
-    bool searchContact();
-    //void deleteContactPrompt();
+
+    void addContactTest(id_info data);
+    void searchContactPrompt();
+    void deleteContactPrompt();
     void listContacts();
-    void displayStructure();
-    Contact* getRoot(){
-        return root;
-    }
+    void inorder(Contact* p);
+    Contact* getRoot(){return root;}
+    void displayStructure(Contact* root);
+    ~AddressBook() {deleteTree(root);}
 };
+Contact* AddressBook::minInSubtree(Contact* root) {
+    Contact* current = root;
+
+    // loop down to find the leftmost leaf
+    while (current->left != nullptr)
+        current = current->left;
+    return current;
+}
+
+
+bool AddressBook::search(int id) {
+    Contact* p = root;
+    while (p != nullptr) {
+        if(id == p->data.id)
+            return true;
+        else if(id > p->data.id)
+            p = p->right;
+        else if(id < p->data.id)
+            p = p->left;
+    }
+    return false;
+}
+Contact* AddressBook::getContact(int id) {
+    cout<<"entered get(1):\n";
+    Contact* p = root;
+    while (p != nullptr) {
+        if(id == p->data.id) {
+            cout<<"entered get(2):\n";
+            return p;
+        }
+        else if(id > p->data.id)
+            p = p->right;
+        else if(id < p->data.id)
+            p = p->left;
+    }
+    cout<<"entered get(3):\n";
+    return nullptr;
+}
+
+void AddressBook::searchContactPrompt() {
+    int id;
+    cout << "enter the ID of the contact you want to search : ";
+    cin >> id;
+    bool isFound = false;
+    if(search(id))
+        isFound = true;
+    if(isFound) {
+        cout << "Contact Found." << endl;
+    }
+    else {
+        cout << "Contact Not Found." << endl;
+    }
+}
+
+void AddressBook::listContacts() {
+    Contact* p = root;
+    inorder(p);
+}
+
+void AddressBook::inorder(Contact* p) {
+    if(p != nullptr) {
+        inorder(p->left);
+        cout<<"Node:\n";
+        p->listInfo();
+        if(p->parent == nullptr){
+            cout<<"Parent:\nNULL\n";
+        }
+        else {
+            cout << "Parent:\n";
+            p->parent->listInfo();
+        }
+        if(p->right != nullptr){
+            cout<<"Right:\n";
+            p->right->listInfo();
+        }
+        if(p->left != nullptr){
+            cout<<"Left:\n";
+            p->left->listInfo();
+        }
+        cout<<endl;
+        inorder(p->right);
+    }
+}
 
 
 void AddressBook::addContactPrompt() {
@@ -171,80 +271,52 @@ void AddressBook::addContactPrompt() {
     root->parent=nullptr;
     n++;
 }
-
-bool AddressBook::searchContact() {
-    int id; 
-    cout << "enter the ID of the contact you want to search : "; 
-    cin >> id; 
-    Contact* p = root;
-    while (p != nullptr) {
-        if(id == p->data.id) 
-        {
-            cout << "Contact Found." << endl; 
-            p->displayInfo();
-            break; 
-        }
-        else if(id > p->data.id)  
-            p = p->right;
-        else if(id < p->data.id)
-            p = p->left; 
-    }
-    cout << "Contact Not Found." << endl; 
-    return false;
+void AddressBook::addContactTest(id_info data){
+    root = addContact(root, data);
+    root->parent=nullptr;
+    n++;
 }
 
-/*void AddressBook::deleteContactPrompt() {
+void AddressBook::deleteContactPrompt() {
     int id;
     cout << "please enter the ID of the contact you want to delete : ";
     cin >> id;
-    if(!search(id)) 
-        cout << "Contact Not Found." << endl; 
-    else {
-        deleteContact(id);
-        cout << "Contact with ID " << id << " deleted." << endl;
-    }
-}
     while(!search(id)) {
         cout << "this id doesn't exist, please enter a valid ID : ";
         cin >> id;
     }
-    deleteContact(id);
-}*/
+    root = deleteContact(root, id);
+    if (root != nullptr)
+        root->parent = nullptr;
+}
 
-bool AddressBook::search(int id) {
-    Contact* p = root;
-    while (p != nullptr) {
-        if(id == p->data.id)
-            return true;
-        else if(id > p->data.id)
-            p = p->right;
-        else if(id < p->data.id)
-            p = p->left;
+Contact* AddressBook::addContact(Contact* parent, id_info data) {
+    if (parent == nullptr) {
+        return new Contact(data.id, data.contactInfo);
     }
-    return false;
-}
 
-
-void AddressBook::listContacts() {
-    Contact* p = root;
-    inorder(p);
-}
-
-void AddressBook::inorder(Contact* p) {
-    if(p != nullptr) {
-        inorder(p->left);
-        p->listInfo();
-        inorder(p->right);
+    if (data.id < parent->data.id) {
+        Contact *newChild = addContact(parent->left, data);
+        parent->left = newChild;
+        newChild->parent = parent;
     }
+    else {
+        Contact* newChild = addContact(parent->right, data);
+        parent->right = newChild;
+        newChild->parent = parent;
+    }
+    // Update height of each root
+    parent->updateHeight();
+
+    // Rebalance the node if needed
+    return restructure(parent);
 }
-
-
-Contact* AddressBook::restructureAdd(Contact* node) {
+Contact* AddressBook::restructure(Contact* node) {
     // LX
     if (node->getBF() > 1) {
         if (node->left->getBF() < 0){
             //rotate grandchild
-            node->left = node->left->leftRotate(); // LR
+            node->left = node->left->rightRotate(); // LR
         }
         else{
             //LL
@@ -257,12 +329,11 @@ Contact* AddressBook::restructureAdd(Contact* node) {
         // RX
     else if (node->getBF() < -1) {
         if (node->right->getBF() > 0) {
-            node->right = node->right->rightRotate(); // RL
+            node->right = node->right->leftRotate(); // RL
         }
         else{
             //RR
         }
-
         Contact* newRoot = node->leftRotate();
 
         return newRoot;
@@ -271,26 +342,160 @@ Contact* AddressBook::restructureAdd(Contact* node) {
         return node; // already balanced
     }
 }
-Contact* AddressBook::addContact(Contact* ancestor, id_info data) {
-    if (ancestor == nullptr) {
-        return new Contact(data.id, data.contactInfo);
+
+Contact* AddressBook::deleteContact(Contact* root, int id) {
+    // single node tree
+    if (root == nullptr)
+        return root;
+
+    if (id < root->data.id) {
+        root->left = deleteContact(root->left, id);
+        if (root->left) root->left->parent = root;  // Fix child pointer
     }
 
-    if (data.id < ancestor->data.id) {
-        Contact *newChild = addContact(ancestor->left, data);
-        ancestor->left = newChild;
-        newChild->parent = ancestor;
+    else if (id > root->data.id) {
+        root->right = deleteContact(root->right, id);
+        if (root->right) root->right->parent = root;  // Fix child pointer
     }
+
     else {
-        Contact* newChild = addContact(ancestor->right, data);
-        ancestor->right = newChild;
-        newChild->parent = ancestor;
+        if ((root->left == nullptr) || (root->right == nullptr)) {
+            // num children <= 1
+            Contact* temp = root->left ? root->left : root->right;
+
+            // single child case (must update its parent)
+            if (temp != nullptr) {
+                temp->parent = root->parent;
+            }
+
+            // If root has a parent, link it with its new child (may be null)
+            if (root->parent != nullptr) {
+                if (root->parent->left == root) {
+                    root->parent->left = temp;
+                } else {
+                    root->parent->right = temp;
+                }
+            } else {
+                // root node of the entire tree being deleted
+                this->root = temp;
+            }
+
+            delete root;
+            return temp;
+        }
+
+        else {
+            // Regular case (replace by successor)
+            Contact* successor = minInSubtree(root->right); // min value in the root's right subtree
+            id_info successorData = successor->data;
+            root->data = successorData;
+
+            // Delete successor (which will have at most one child)
+            root->right = deleteContact(root->right, successorData.id);
+            if (root->right) root->right->parent = root;  // Fix child pointer
+
+            // No need to return early, continue to update and rebalance below
+        }
     }
-    // Update height of each ancestor
-    ancestor->updateHeight();
+
+    // Update height
+    root->updateHeight();
 
     // Rebalance the node if needed
-    return restructureAdd(ancestor);
+    Contact* newRoot = restructure(root);
+
+    // Fix parent-child linkage if root was rotated
+    if (newRoot->parent == nullptr) {
+        this->root = newRoot;
+    }
+
+    return newRoot;
+}
+
+
+void AddressBook::displayStructureLogic(Contact** contactsAtLevel, int level, int maxLevel) {
+    int levelWidth = (int)pow(2, level - 1);
+    bool allNull = true;
+    for (int i = 0; i < levelWidth; ++i) {
+        if (contactsAtLevel[i] != nullptr) {
+            allNull = false;
+            break;
+        }
+    }
+    if (allNull)
+        return;
+
+    int floor = maxLevel - level;
+    int betwNodeAndChildLinkSpaces = (int)pow(2, max(floor - 1, 0));
+    int preSpaces = (int)pow(2, floor) - 1;
+    int betwNodesSpaces = (int)pow(2, floor + 1) - 1;
+
+    displaySpaces(preSpaces);
+
+    for (int i = 0; i < levelWidth; ++i) {
+        if (contactsAtLevel[i] != nullptr)
+            cout << contactsAtLevel[i]->data.id;
+        else
+            cout << " ";
+        displaySpaces(betwNodesSpaces);
+    }
+    cout << endl;
+
+    for (int i = 0; i < levelWidth; ++i) {
+        displaySpaces(preSpaces - betwNodeAndChildLinkSpaces);
+
+        if (contactsAtLevel[i] == nullptr) {
+            displaySpaces(betwNodeAndChildLinkSpaces * 2 + betwNodeAndChildLinkSpaces + 1);
+            continue;
+        }
+
+        if (contactsAtLevel[i]->left != nullptr)
+            cout << "/";
+        else
+            displaySpaces(1);
+
+        displaySpaces(betwNodeAndChildLinkSpaces * 2 - 1);
+
+        if (contactsAtLevel[i]->right != nullptr)
+            cout << "\\";
+        else
+            displaySpaces(1);
+
+        displaySpaces(betwNodeAndChildLinkSpaces * 2 - betwNodeAndChildLinkSpaces);
+    }
+    cout << endl;
+
+    Contact** nextLevel = new Contact*[levelWidth * 2];
+    for (int i = 0; i < levelWidth * 2; ++i)
+        nextLevel[i] = nullptr;
+
+    for (int i = 0; i < levelWidth; ++i) {
+        nextLevel[2 * i] = contactsAtLevel[i] ? contactsAtLevel[i]->left : nullptr;
+        nextLevel[2 * i + 1] = contactsAtLevel[i] ? contactsAtLevel[i]->right : nullptr;
+    }
+
+    displayStructureLogic(nextLevel, level + 1, maxLevel);
+    delete[] nextLevel;
+
+}
+void AddressBook::displayStructure(Contact* root) {
+    int maxLevel = maxDepth(root);
+    int maxNumContacts = (int)pow(2, maxLevel);
+
+    Contact** currentLevel = new Contact*[maxNumContacts];
+    for (int i = 0; i < maxNumContacts; ++i)
+        currentLevel[i] = nullptr;
+
+    currentLevel[0] = root;
+    displayStructureLogic(currentLevel, 1, maxLevel);
+    delete[] currentLevel;
+}
+void AddressBook::deleteTree(Contact* root) {
+    if (root == nullptr)
+        return;
+    deleteTree(root->left);
+    deleteTree(root->right);
+    delete root;
 }
 
 int main() {
@@ -313,6 +518,30 @@ int main() {
 
     
     
+    id_info T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15;
+    id_info* T[15] = {&T1, &T2, &T3, &T4, &T5, &T6, &T7, &T8, &T9, &T10, &T11, &T12, &T13, &T14, &T15};
+
+    for(int i=0;i<15;i++){
+        T[i]->id = i + 1;
+        char c = 'A' + i;
+        T[i]->contactInfo.name = string(1, c);
+        T[i]->contactInfo.phone = string(2, c);
+        T[i]->contactInfo.email = string(3, c);
+    }
+
+    for(int i=0;i<15;i++){
+        tree.addContactTest(*T[i]);
+    }
+    cout << "\nContacts (before del):" << endl;
+    tree.listContacts();
+    tree.displayStructure(tree.getRoot());
+    tree.deleteContactPrompt();
+
+    cout << "\nContacts (after del):" << endl;
+    tree.listContacts();
+    tree.displayStructure(tree.getRoot());
+    cout<<endl;
+
     return 0;
 }
 
