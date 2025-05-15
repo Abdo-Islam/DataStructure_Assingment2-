@@ -230,24 +230,7 @@ void AddressBook::listContacts() {
 void AddressBook::inorder(Contact* p) {
     if(p != nullptr) {
         inorder(p->left);
-        cout<<"Node:\n";
         p->listInfo();
-        if(p->parent == nullptr){
-            cout<<"Parent:\nNULL\n";
-        }
-        else {
-            cout << "Parent:\n";
-            p->parent->listInfo();
-        }
-        if(p->right != nullptr){
-            cout<<"Right:\n";
-            p->right->listInfo();
-        }
-        if(p->left != nullptr){
-            cout<<"Left:\n";
-            p->left->listInfo();
-        }
-        cout<<endl;
         inorder(p->right);
     }
 }
