@@ -108,9 +108,7 @@ int main(){
     LinkedStack Back;
     LinkedStack Forward;
     int option;
-    string fileName = "";
-    cout << "Insert file name with extension .txt : \n--> ";
-    cin >> fileName;
+    string fileName = "tst.txt";
     ifstream inFile(fileName);
     string line;
     if (inFile.is_open()) {
